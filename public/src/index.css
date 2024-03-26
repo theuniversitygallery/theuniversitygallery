@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'google-sans';
+    src: url("./assets/fonts/ProductSans-Regular.ttf");
+}
+
+@layer base {
+    html {
+        font-family: "google-sans", Verdana, Geneva, Tahoma, sans-serif;
+        color: #0f3d36;
+        background: rgb(243 244 246);
+    }
+    #onboarding {
+        background: url("/bgImg.jpg") no-repeat center center;
+        background-size: cover;
+    }
+    .index_left {
+        background: url("/user_icon_3.jpg") no-repeat center center;
+        background-size: cover;
+    }
+}
+@layer components {
+    .standard-file-input {
+        @apply border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:bg-slate-50 block w-full ps-4 p-2 file:bg-mainBgColor file:text-base file:hover:bg-altBgColor file:outline-none file:border-altBgColor file:border file:py-1 file:px-2 file:hover:text-altTextColor file:rounded
+    }
+}
