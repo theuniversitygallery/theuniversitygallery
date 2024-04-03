@@ -1,0 +1,47 @@
+[
+    {
+        "_id":1,
+        "username":"bigSeven01",
+        "email":"bigseven@gmail.com",
+        "passCode":"$2a$10$MqwZ1K2xpPqA8USuo3vGz.wrUED2gI1g7sLjH0hMS4rixUF66UwTO",
+        "roles":{
+            "User": 7070
+        },
+        "userType":"company"
+    },
+    {
+        "_id":2,
+        "username":"bigSeven",
+        "email":"bigseven@gmail.com",
+        "passCode":"$2a$10$8okF1jlHoFpF6dftSsgR4O/nkuv48HpBpXAXjgFgXGgPPpmLxN6NC",
+        "roles":{
+            "User": 7070,
+            "Editor": 6699,
+            "Admin": 3669
+        },
+        "userType":"company",
+        "refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJpZ1NldmVuIiwiaWF0IjoxNzEwNzkzNjg2LCJleHAiOjE3MTA4MTE2ODZ9.h_XJXjYN2scHmtpHUjkO11XALl2nRIPudnSaOcjcajI"
+    },
+    {
+        "_id":3,
+        "username":"bigSeven hoiiu",
+        "email":"bigseven@gmail.com",
+        "passCode":"$2a$10$ehDmrne2GrLfJdsxBQXxWuugbWIiNJbuCEW.Oc74IFEqgaXY00N.y",
+        "roles":{
+            "User": 7070
+        },
+        "userType":"company"
+    },
+    {
+        "_id":4,
+        "username":"bigSeven_",
+        "email":"bigseven@gmail.com",
+        "passCode":"$2a$10$6bGzI1aYeLMk3Ux5MT6zKerEm206Nh.eTwNOfnHKFy3LFThV10fJa",
+        "roles":{
+            "User": 7070,
+            "Editor": 6699
+        },
+        "userType":"company",
+        "refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJpZ1NldmVuXyIsImlhdCI6MTcxMTUxNTI1MywiZXhwIjoxNzExNTMzMjUzfQ.Q646Y5d6MBbuYhKUfQ5Crv7PfD04nKX3kZXcEoYan-s"
+    }
+]
