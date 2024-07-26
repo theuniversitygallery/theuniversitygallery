@@ -1,37 +1,42 @@
-
-// database
-const userDB = {
-    users : require("../models/userData.json"),
-    setUsers : function (data) {this.users = data}
-
+const citizen = {
+    users: require("./../models/citizen.json"),
+    createUser: function (data) { this.users = data}
 }
 
-const fsPromises = require('fs').promises;
-const path = require('path')
-// login handling 
-const handleLogout =  async (req, res) => {
-    // on client click log out delete accessToken .. front end code here
+const { matchedData,validationResult } = require("express-validator");
+const bcrypt = require("bcrypt");
+const validateCitizenName = require("../util/loginUtility");
+const jwt = require('jsonwebtoken')
+require('dotenv').config();
+const fspromises = require("fs").promises;
+const path = require('path');
 
+const handleLogOut = async(req,res) => {
     const cookies = req.cookies;
-//    check if cookies exist
-    if (!cookies?.jwt) return res.sendStatus(204) // successful nut no content
-        const refreshToken = cookies.jwt;
+    // change the jwt to something nice and easy to remember
+    if(cookies?.loginTokenJwt) return res.sendStatus(204)
+    const refreshToken = cookies.loginTokenJwt;
     
-     // check if refreshToken exist in the db
-        const foundUser = userDB.users.find(person => person.refreshToken === refreshToken);
-        if (!foundUser) {
-            res.clearCookie('jwt',{httpOnly: true,sameSite:'None', secure:true})
-        };
-     
-        const otherUsers = userDB.users.filter(person => person.refreshToken !== foundUser.refreshToken)
-        const currentUser = {...foundUser, refreshToken: ""};
-        users.setUsers([...otherUsers,foundUser]);
+        // check if the citizen name contains @ if true is email so user can use email to sign up
+        // check if to see if user exist
+        const foundRefreshToken = citizen.users.find(user => user.refreshToken === refreshToken);
+        if (!foundRefreshToken) {
+            res.clearcookie('loginTokenJwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+            return res.sendStatus("403");
+        }
+        // deleting refresh token from jsonDB 
+        const otherUsers = citizen.users.filter(user => user.refreshToken !== foundRefreshToken.refreshToken )
+        const currentUser = {...foundRefreshToken,refreshToken:''}
 
-        await fsPromises.writeFile(
-            path.join(__dirname, "..","models", "userData.json"),
-            JSON.stringify(usersDB.userDB)
+        citizen.createUser([...otherUsers, currentUser]);
+
+        await fspromises.writeFile(
+            path.join(__dirname, '..','models', 'citizen.json'),
+            JSON.stringify(citizen.createUser)
         )
-        res.clearCookie('jwt',{httpOnly: true,sameSite:'None', secure:true})
+
+        res.clearcookie('loginTokenJwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
         res.sendStatus(204)
 }
-module.exports = {handleLogout}
+
+module.exports = handleLogOut;

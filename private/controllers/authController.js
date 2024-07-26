@@ -1,90 +1,79 @@
-/**
-NOTE***
- The auth controllers also called the login auth
- 1. connect to database 
- 2. declare bcrypt for passCode harsh
- 3 declare async function to check if user name and password is not empty
- inside the async function 
- - check if username  exist in the database
- - use bcrypt to decrypte the password and compare the user input and the database passCode
- - if it found redirect user to the explore page
-
-*/
-// database
-const userDB = {
-    users : require("../models/userData.json"),
-    setUsers : function (data) {this.users = data}
-
+const citizen = {
+    users: require("./../models/citizen.json"),
+    createUser: function (data) { this.users = data}
 }
 
-// add bcrypt for the password encrypt | decryption
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-require('dotenv').config()
-const fsPromises = require('fs').promises;
+const { matchedData,validationResult } = require("express-validator");
+const bcrypt = require("bcrypt");
+const validateCitizenName = require("../util/loginUtility");
+const jwt = require('jsonwebtoken')
+require('dotenv').config();
+const fspromises = require("fs").promises;
 const path = require('path');
-const { send } = require("process");
 
-// login handling 
-const userLogin =  async (req, res) => {
-    // const {username, passCode} = req.body;
-    const {username,passCode} = req.body;
-    console.log(`${username} - ${passCode}`)
-    // check if there is an empty space
-    if (!username || !passCode) return res.status(400).json({"message":"username and password require"});
-    /*************
-    // future check input one by one   */
-    // check if username exist in the database
-    const findUser = userDB.users.find(person => person.username === username);
-    if(!findUser){
-         return res.status(401).json({ "message": "Unauthorized: User not found." });
-    }
+const loginController = async(req,res) => {
+    let result = validationResult(req);
+    if (!result.isEmpty()) return res.status(400).json({"message":"fill in the input with correct info"})
+    
+    const data = matchedData(req)
+    const {citizenName,passCode} = data;
 
-    // compare password with database and decript it
-    const match = await bcrypt.compare(passCode , findUser.passCode)
-    if (match) {
-        const roles = Object.values(findUser.roles);
-        // jwt web token for session
-        // define accesstoken
-        const accessToken = jwt.sign(
+    if (!validateCitizenName(citizenName)) {
+        return res.status(401).json({ message: "Invalid citizen name format" });
+      }
+      
+    if (!citizenName || !passCode) return res.status(400).json({"message":"fill in the input with correct info"})
+    
+    try {
+        // check if the citizen name contains @ if true is email so user can use email to sign up
+        // check if to see if user exist
+        const found = citizen.users.find(user => user.citizenName === citizenName);
+        if (!found) return res.status(401).json({"message":"user not found this ID isnot correct"})
+        
+        const matched = await bcrypt.compare(passCode,found.hashedPwd);
+
+        if (matched){ 
+            const accessToken = jwt.sign(
+                { "citizenName": found.citizenName },
+                process.env.ACCESS_TOKEN_SECRET,
+                { expiresIn: '16m' }
+            );
+            const refreshToken = jwt.sign(
+                { "citizenName": found.citizenName },
+                process.env.REFRESH_TOKEN_SECRET,
+                { expiresIn: '1d' }
+            );
+
+            // save refresh token with the current user.
+            const otherUsers = citizen.users.filter(person => person.citizenName !== found.citizenName);
+            const currentUser = {...found, refreshToken};
+            citizen.createUser([...otherUsers,currentUser]);
+            await fspromises.writeFile(
+                path.join(__dirname,'..','models','citizen.json'), 
+                JSON.stringify(citizen.users)
+            );
+
+            res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
+            res.cookie('loginTokenJwt', refreshToken, { 
+                httpOnly: true, secure: true, maxAge: 24 * 60 * 60 * 1000 
+            });
+            res.cookie('loginTokenJwt', refreshToken, {
+                httpOnly: true,
+                sameSite: 'Strict', // Adjust based on your requirements
+                // secure: process.env.NODE_ENV === 'production', // Ensure secure is set to true if using HTTPS
+                maxAge: 24 * 60 * 60 * 1000 // 1 day
+            });
             
-            {
-                "userInfo":{
-                    "username": findUser.username,
-                    "roles": roles
-                }
-            },
-            process.env.ACCESS_TOKEN_SECRET,
-            {expiresIn: "1h"}
-        ) 
-        const refreshToken = jwt.sign(
-            // later use userID instead of username
-            {"username": findUser.username},
-            process.env.REFRESH_TOKEN_SECRET,
-            {expiresIn: "1d"}
-        ) 
-        // save the token with the user credentials
-        // get all users except current user
-        const otherUser = userDB.users.filter(person => person.username !== findUser.username)
-        // add the refresh token to the current user or foundUser using the spread operator 
-        const currentUser = {...findUser,refreshToken};
-        // add to the list of userDB;
-        userDB.setUsers([...otherUser,currentUser]);
-        // write it to the database with the refresh token
-        await fsPromises.writeFile(
-            path.join(__dirname,'..','models','userData.json'),
-            JSON.stringify(userDB.users)
-        );
-        // if the refreshToken token get stores then store it in the cookies to give user access to pages
-        res.cookie('jwt',refreshToken,{httpOnly: true, sameSite: 'None', secure:true,maxAge: 10*60*60*1000}) //10 hours
-        // i am sending this code to the front end
-        res.json({accessToken});
-    } else {
-        res.status(401).json({ "message": "Unauthorized: Incorrect password." });
+            res.json({accessToken});    
+
+        }else {
+            return res.status(401).json({"error": "password is not correct" });
+        }
+        
+    } catch (error) {
+        res.status(500).json({"mgs":error.message})
     }
 
 }
 
-
-
-module.exports = {userLogin}
+module.exports = loginController;

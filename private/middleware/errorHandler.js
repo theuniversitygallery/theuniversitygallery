@@ -1,7 +1,8 @@
-const {logEvents} = require('./logEvents');
-const errorhandler = (err,req,res,next)=>{
-    logEvents(`${err.name}\t${err.message}`, 'errLog.txt');
+const {logEvent} = require('./logEvents')
+const errorHandler = (err,req,res,next) => {
+    logEvent(`${err.name} : ${err.message}`,'errorLog.txt');
+    console.log(err.stack);
     res.status(500).send(err.message);
 }
 
-module.exports = errorhandler;
+module.exports = errorHandler;
